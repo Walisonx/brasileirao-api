@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ public class ScrapingUtil {
 	private static final String COMPLEMENTO_URL_GOOGLE = "&hl=pt-BR";
 
 	public static void main(String[] args) {
-		String url = BASE_URL_GOOGLE + "portugal+x+uruguai" + COMPLEMENTO_URL_GOOGLE;
+		String url = BASE_URL_GOOGLE + "brasil+x+camarões" + COMPLEMENTO_URL_GOOGLE;
 		ScrapingUtil scraping = new ScrapingUtil();
 		scraping.obtemInformacoesPartida(url);
 	}
@@ -35,8 +36,23 @@ public class ScrapingUtil {
 			StatusPartida statusPartida = obtemStatusPartida(document);
 			LOGGER.info("Status Partida: {}", statusPartida);
       
-			String tempoPartida = obtemTempoPartida(document);
-			LOGGER.info("Tempo Partida: {}", tempoPartida);			
+			if(statusPartida != StatusPartida.PARTIDA_NAO_INICIA) {
+				String tempoPartida = obtemTempoPartida(document);
+				LOGGER.info("Tempo Partida: {}", tempoPartida);	
+			}
+			
+			String nomeEquipeCasa = recuperaNomeEquipeCasa (document);
+			LOGGER.info("Nome Equipe Casa: {}", nomeEquipeCasa);
+			
+			String nomeEquipeVisitante = recuperaNomeEquipeVisitante (document);
+			LOGGER.info("Nome Equipe Visitante: {}", nomeEquipeVisitante);
+				
+			String urlLogoEquipeCasa = recuperaLogoEquipeCasa(document);
+			LOGGER.info("Url logo equipe casa: {}", urlLogoEquipeCasa);
+			
+			String urlLogoEquipeVisitante = recuperaLogoEquipeVisitante(document);
+			LOGGER.info("Url logo equipe visitante: {}", urlLogoEquipeVisitante);
+			
 		} catch (IOException e) {
 			LOGGER.error("ERRO  AO TENTAR CONECTAR NO GOOGLE COM JSOUP -> {}", e.getMessage());
 		}
@@ -94,5 +110,28 @@ public class ScrapingUtil {
 		}
 		
 		}
+	public String recuperaNomeEquipeCasa ( Document document) {
+		Element elemento = document.selectFirst("div[class=imso_mh__first-tn-ed imso_mh__tnal-cont imso-tnol]");
+		String nomeEquipe = elemento.select("span").text();
+		
+		return nomeEquipe;
 	}
-
+	public String recuperaNomeEquipeVisitante ( Document document) {
+		Element elemento = document.selectFirst("div[class=imso_mh__second-tn-ed imso_mh__tnal-cont imso-tnol]");
+		String nomeEquipe = elemento.select("span").text();
+		
+		return nomeEquipe;
+	}
+	public String recuperaLogoEquipeCasa(Document document) {
+		Element elemento = document.selectFirst("div[class=imso_mh__first-tn-ed imso_mh__tnal-cont imso-tnol]");
+		String urlLogo = "https:" + elemento.select("img[class=imso_btl__mh-logo]").attr("src");
+		
+		return urlLogo;
+	}
+	public String recuperaLogoEquipeVisitante(Document document) {
+		Element elemento = document.selectFirst("div[class=imso_mh__second-tn-ed imso_mh__tnal-cont imso-tnol]");
+		String urlLogo = "https:" + elemento.select("img[class=imso_btl__mh-logo]").attr("src");
+		
+		return urlLogo;
+	}
+}
