@@ -10,8 +10,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import br.com.phc.brasileiraoapi.dto.PartidaGoogleDTO;
+
+@Service
 
 public class ScrapingUtil {
 
@@ -46,11 +49,6 @@ public class ScrapingUtil {
 	private static final String SPAN = "span";
 	private static final String PENALTIS = "Pênaltis";
 	
-	public static void main(String[] args) {
-		String url = BASE_URL_GOOGLE + "brasil+x+croacia";
-		ScrapingUtil scraping = new ScrapingUtil();
-		scraping.obtemInformacoesPartida(url);
-	}
 
 	public PartidaGoogleDTO obtemInformacoesPartida(String url) {
 		PartidaGoogleDTO partida = new PartidaGoogleDTO();
@@ -64,50 +62,62 @@ public class ScrapingUtil {
 			LOGGER.info("Titulo da pagina: {}", title);
 
 			StatusPartida statusPartida = obtemStatusPartida(document);
+			partida.setStatuspartida(statusPartida.toString());
 			LOGGER.info("Status Partida: {}", statusPartida);
 
 			if (statusPartida != StatusPartida.PARTIDA_NAO_INICIA) {
 				String tempoPartida = obtemTempoPartida(document);
+				partida.setTempoPartida(tempoPartida);
 				LOGGER.info("Tempo Partida: {}", tempoPartida);
 				
 				Integer placarEquipeCasa = recuperaPlacarEquipes(document, DIV_PLACAR_EQUIPE_CASA);
+				partida.setPlacarEquipeCasa(placarEquipeCasa);
 				LOGGER.info("Placar equipe casa: {}", placarEquipeCasa);
 				
 				Integer placarEquipeVisitante = recuperaPlacarEquipes(document, DIV_PLACAR_EQUIPE_VISITANTE);
+				partida.setPlacarEquipeVisitante(placarEquipeVisitante);
 				LOGGER.info("Placar equipe visitante: {}", placarEquipeVisitante);
 				
 				String golsEquipeCasa = recuperaGolsEquipe(document, DIV_GOLS_EQUIPE_CASA);
-				LOGGER.info("Gols equipe casa: {}", golsEquipeCasa);
+				partida.setGolsEquipeCasa(golsEquipeCasa);
+   				LOGGER.info("Gols equipe casa: {}", golsEquipeCasa);
 				
 				String golsEquipeVisitante = recuperaGolsEquipe(document,DIV_GOLS_EQUIPE_VISITANTE);
+				partida.setGolsEquipeVisitante(golsEquipeVisitante);
 				LOGGER.info("Gols equipe visitante: {}", golsEquipeVisitante);
 				
 				Integer placarEstendidoEquipeCasa = buscaPenalidades(document, CASA);
+				partida.setPlacarEstendidoEquipeCasa(golsEquipeCasa);
 				LOGGER.info("placar estendido equipe casa: {}", placarEstendidoEquipeCasa);
 				
 				Integer placarEstendidoEquipeVisitante = buscaPenalidades(document, VISITANTE);
+				partida.setPlacarEstendidoEquipeVisitante(golsEquipeVisitante);
 				LOGGER.info("placar estendido equipe visitante: {}", placarEstendidoEquipeVisitante);
 			}
 
 			String nomeEquipeCasa = recuperaNomeEquipes(document, DIV_DADOS_EQUIPE_CASA);
+			partida.setNomeEquipeCasa(nomeEquipeCasa);
 			LOGGER.info("Nome Equipe Casa: {}", nomeEquipeCasa);
 
 			String nomeEquipeVisitante = recuperaNomeEquipes(document, DIV_DADOS_EQUIPE_VISITANTE);
+			partida.setNomeEquipeVisitante(nomeEquipeVisitante);
 			LOGGER.info("Nome Equipe Visitante: {}", nomeEquipeVisitante);
 
 			String urlLogoEquipeCasa = recuperaLogoEquipes(document, DIV_DADOS_EQUIPE_CASA);
+			partida.setUrlLogoEquipeCasa(urlLogoEquipeCasa);
 			LOGGER.info("Url logo equipe casa: {}", urlLogoEquipeCasa);
 
 			String urlLogoEquipeVisitante = recuperaLogoEquipes(document, DIV_DADOS_EQUIPE_VISITANTE);
+			partida.setUrlLogoEquipeVisitante(urlLogoEquipeVisitante);
 			LOGGER.info("Url logo equipe visitante: {}", urlLogoEquipeVisitante);
 
-			
+			return partida;
 
 		} catch (IOException e) {
 			LOGGER.error("ERRO  AO TENTAR CONECTAR NO GOOGLE COM JSOUP -> {}", e.getMessage());
 		}
 
-		return partida;
+		return null;
 
 	}
 
@@ -224,5 +234,16 @@ public class ScrapingUtil {
 		
 	}
 	
+	public String montarUrlGoogle(String nomeEquipeCasa, String nomeEquipeVisitante) {
+		try {
+			String equipeCasa = nomeEquipeCasa.replace(" ", "+").replace("-", "+");
+			String equipeVisitante = nomeEquipeVisitante.replace(" ", "+").replace("-", "+");	
+			
+			return BASE_URL_GOOGLE + equipeCasa+"+x+"+ equipeVisitante + COMPLEMENTO_URL_GOOGLE;
+		}catch(Exception e) {
+			LOGGER.error("ERRO: {}", e.getMessage());
+		}
+		return null;
+	}
 
 }
